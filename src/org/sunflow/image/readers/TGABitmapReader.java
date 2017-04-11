@@ -1,9 +1,15 @@
 package org.sunflow.image.readers;
 
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.JarURLConnection;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLConnection;
 
 import org.sunflow.image.Bitmap;
 import org.sunflow.image.BitmapReader;
@@ -12,120 +18,160 @@ import org.sunflow.image.formats.BitmapG8;
 import org.sunflow.image.formats.BitmapRGB8;
 import org.sunflow.image.formats.BitmapRGBA8;
 
-public class TGABitmapReader implements BitmapReader {
-    private static final int[] CHANNEL_INDEX = { 2, 1, 0, 3 };
+public class TGABitmapReader
+  implements BitmapReader
+{
+  private static final int[] CHANNEL_INDEX = { 2, 1, 0, 3 };
 
-    public Bitmap load(String filename, boolean isLinear) throws IOException, BitmapFormatException {
-        InputStream f = new BufferedInputStream(new FileInputStream(filename));
-        byte[] read = new byte[4];
-
-        // read header
-        int idsize = f.read();
-        int cmaptype = f.read(); // cmap byte (unsupported)
-        if (cmaptype != 0)
-            throw new BitmapFormatException(String.format("Colormapping (type: %d) is unsupported", cmaptype));
-        int datatype = f.read();
-
-        // colormap info (5 bytes ignored)
-        f.read();
-        f.read();
-        f.read();
-        f.read();
-        f.read();
-
-        f.read(); // xstart, 16 bits (ignored)
-        f.read();
-        f.read(); // ystart, 16 bits (ignored)
-        f.read();
-
-        // read resolution
-        int width = f.read();
-        width |= f.read() << 8;
-        int height = f.read();
-        height |= f.read() << 8;
-
-        int bits = f.read();
-        int bpp = bits / 8;
-
-        int imgdscr = f.read();
-
-        // skip image ID if present
-        if (idsize != 0)
-            f.skip(idsize);
-
-        // allocate byte buffer to hold the image
-        byte[] pixels = new byte[width * height * bpp];
-        if (datatype == 2 || datatype == 3) {
-            if (bpp != 1 && bpp != 3 && bpp != 4)
-                throw new BitmapFormatException(String.format("Invalid bit depth in uncompressed TGA: %d", bits));
-            // uncompressed image
-            for (int ptr = 0; ptr < pixels.length; ptr += bpp) {
-                // read bytes
-                f.read(read, 0, bpp);
-                for (int i = 0; i < bpp; i++)
-                    pixels[ptr + CHANNEL_INDEX[i]] = read[i];
-            }
-        } else if (datatype == 10) {
-            if (bpp != 3 && bpp != 4)
-                throw new BitmapFormatException(String.format("Invalid bit depth in run-length encoded TGA: %d", bits));
-            // RLE encoded image
-            for (int ptr = 0; ptr < pixels.length;) {
-                int rle = f.read();
-                int num = 1 + (rle & 0x7F);
-                if ((rle & 0x80) != 0) {
-                    // rle packet - decode length and copy pixel
-                    f.read(read, 0, bpp);
-                    for (int j = 0; j < num; j++) {
-                        for (int i = 0; i < bpp; i++)
-                            pixels[ptr + CHANNEL_INDEX[i]] = read[i];
-                        ptr += bpp;
-                    }
-                } else {
-                    // raw packet - decode length and read pixels
-                    for (int j = 0; j < num; j++) {
-                        f.read(read, 0, bpp);
-                        for (int i = 0; i < bpp; i++)
-                            pixels[ptr + CHANNEL_INDEX[i]] = read[i];
-                        ptr += bpp;
-                    }
-                }
-            }
-        } else
-            throw new BitmapFormatException(String.format("Unsupported TGA image type: %d", datatype));
-
-        if (!isLinear) {
-            // apply reverse correction
-            for (int ptr = 0; ptr < pixels.length; ptr += bpp) {
-                for (int i = 0; i < 3 && i < bpp; i++)
-                    pixels[ptr + i] = Color.NATIVE_SPACE.rgbToLinear(pixels[ptr + i]);
-            }
-        }
-
-        // should image be flipped in Y?
-        if ((imgdscr & 32) == 32) {
-            for (int y = 0, pix_ptr = 0; y < (height / 2); y++) {
-                int bot_ptr = bpp * (height - y - 1) * width;
-                for (int x = 0; x < width; x++) {
-                    for (int i = 0; i < bpp; i++) {
-                        byte t = pixels[pix_ptr + i];
-                        pixels[pix_ptr + i] = pixels[bot_ptr + i];
-                        pixels[bot_ptr + i] = t;
-                    }
-                    pix_ptr += bpp;
-                    bot_ptr += bpp;
-                }
-            }
-
-        }
-        f.close();
-        switch (bpp) {
-            case 1:
-                return new BitmapG8(width, height, pixels);
-            case 3:
-                return new BitmapRGB8(width, height, pixels);
-            case 4:
-                return new BitmapRGBA8(width, height, pixels);
-        }
-        throw new BitmapFormatException("Inconsistent code in TGA reader");
+  public Bitmap load(String paramString, boolean paramBoolean)
+    throws IOException, BitmapReader.BitmapFormatException
+  {
+      InputStream localObject;
+    try
+    {
+      URLConnection localURLConnection = new URL(paramString).openConnection();
+      if ((localURLConnection instanceof JarURLConnection))
+      {
+        JarURLConnection localJarURLConnection = (JarURLConnection)localURLConnection;
+        URL localURL = localJarURLConnection.getJarFileURL();
+        if (localURL.getProtocol().equalsIgnoreCase("file"))
+          try
+          {
+            if (new File(localURL.toURI()).canWrite())
+              localURLConnection.setUseCaches(false);
+          }
+          catch (URISyntaxException localURISyntaxException)
+          {
+            throw new IOException(localURISyntaxException);
+          }
+      }
+      localObject = localURLConnection.getInputStream();
     }
+    catch (MalformedURLException localMalformedURLException)
+    {
+      localObject = new FileInputStream(paramString);
+    }
+      localObject = new BufferedInputStream(localObject);
+    byte[] arrayOfByte1 = new byte[4];
+    int i = localObject.read();
+    int j = localObject.read();
+    if (j != 0)
+      throw new BitmapReader.BitmapFormatException(String.format("Colormapping (type: %d) is unsupported", new Object[] { Integer.valueOf(j) }));
+    int k = localObject.read();
+    localObject.read();
+    localObject.read();
+    localObject.read();
+    localObject.read();
+    localObject.read();
+    localObject.read();
+    localObject.read();
+    localObject.read();
+    localObject.read();
+    int m = localObject.read();
+    m |= localObject.read() << 8;
+    int n = localObject.read();
+    n |= localObject.read() << 8;
+    int i1 = localObject.read();
+    int i2 = i1 / 8;
+    int i3 = localObject.read();
+    if (i != 0)
+      localObject.skip(i);
+    byte[] arrayOfByte2 = new byte[m * n * i2];
+    int i4;
+    int i5;
+    int i6;
+    int i7;
+    int i8;
+    if ((k == 2) || (k == 3))
+    {
+      if ((i2 != 1) && (i2 != 3) && (i2 != 4))
+        throw new BitmapReader.BitmapFormatException(String.format("Invalid bit depth in uncompressed TGA: %d", new Object[] { Integer.valueOf(i1) }));
+      i4 = 0;
+      while (i4 < arrayOfByte2.length)
+      {
+        localObject.read(arrayOfByte1, 0, i2);
+        for (i5 = 0; i5 < i2; i5++)
+          arrayOfByte2[(i4 + CHANNEL_INDEX[i5])] = arrayOfByte1[i5];
+        i4 += i2;
+      }
+    }
+    else if (k == 10)
+    {
+      if ((i2 != 3) && (i2 != 4))
+        throw new BitmapReader.BitmapFormatException(String.format("Invalid bit depth in run-length encoded TGA: %d", new Object[] { Integer.valueOf(i1) }));
+      i4 = 0;
+      while (i4 < arrayOfByte2.length)
+      {
+        i5 = localObject.read();
+        i6 = 1 + (i5 & 0x7F);
+        if ((i5 & 0x80) != 0)
+        {
+          localObject.read(arrayOfByte1, 0, i2);
+          for (i7 = 0; i7 < i6; i7++)
+          {
+            for (i8 = 0; i8 < i2; i8++)
+              arrayOfByte2[(i4 + CHANNEL_INDEX[i8])] = arrayOfByte1[i8];
+            i4 += i2;
+          }
+        }
+        else
+        {
+          for (i7 = 0; i7 < i6; i7++)
+          {
+            localObject.read(arrayOfByte1, 0, i2);
+            for (i8 = 0; i8 < i2; i8++)
+              arrayOfByte2[(i4 + CHANNEL_INDEX[i8])] = arrayOfByte1[i8];
+            i4 += i2;
+          }
+        }
+      }
+    }
+    else
+    {
+      throw new BitmapReader.BitmapFormatException(String.format("Unsupported TGA image type: %d", new Object[] { Integer.valueOf(k) }));
+    }
+    if (!paramBoolean)
+    {
+      i4 = 0;
+      while (i4 < arrayOfByte2.length)
+      {
+        for (i5 = 0; (i5 < 3) && (i5 < i2); i5++)
+          arrayOfByte2[(i4 + i5)] = Color.NATIVE_SPACE.rgbToLinear(arrayOfByte2[(i4 + i5)]);
+        i4 += i2;
+      }
+    }
+    if ((i3 & 0x20) == 32)
+    {
+      i4 = 0;
+      i5 = 0;
+      while (i4 < n / 2)
+      {
+        i6 = i2 * (n - i4 - 1) * m;
+        for (i7 = 0; i7 < m; i7++)
+        {
+          for (i8 = 0; i8 < i2; i8++)
+          {
+            int i9 = arrayOfByte2[(i5 + i8)];
+            arrayOfByte2[(i5 + i8)] = arrayOfByte2[(i6 + i8)];
+            arrayOfByte2[(i6 + i8)] = (byte) i9;
+          }
+          i5 += i2;
+          i6 += i2;
+        }
+        i4++;
+      }
+    }
+    localObject.close();
+    switch (i2)
+    {
+    case 1:
+      return new BitmapG8(m, n, arrayOfByte2);
+    case 3:
+      return new BitmapRGB8(m, n, arrayOfByte2);
+    case 4:
+      return new BitmapRGBA8(m, n, arrayOfByte2);
+    case 2:
+    }
+    throw new BitmapReader.BitmapFormatException("Inconsistent code in TGA reader");
+  }
 }
