@@ -121,8 +121,6 @@ public class SunSkyLight implements LightSource, PrimitiveList, Shader {
         double num = ((1.0 + lam[0] * Math.exp(lam[1] / Math.cos(theta))) * (1.0 + lam[2] * Math.exp(lam[3] * gamma) + lam[4] * Math.cos(gamma) * Math.cos(gamma)));
         return lvz * num / den;
     }
-    
- 
 
     private void initSunSky() {
         // perform all the required initialization of constants
@@ -316,11 +314,12 @@ public class SunSkyLight implements LightSource, PrimitiveList, Shader {
     public Color getRadiance(ShadingState state) {
         return getSkyRGB(basis.untransform(state.getRay().getDirection())).constrainRGB();
     }
-    
-    public Color getSunColor()
-    {
-      return getSkyRGB(this.basis.untransform(this.sunDirWorld)).constrainRGB();
+
+    // EP : Reused sun sky color
+    public Color getSunColor() {
+        return getSkyRGB(basis.untransform(sunDirWorld)).constrainRGB();
     }
+    // EP : End of modification
     
     public void scatterPhoton(ShadingState state, Color power) {
         // let photon escape
@@ -341,9 +340,14 @@ public class SunSkyLight implements LightSource, PrimitiveList, Shader {
     public Instance createInstance() {
         return Instance.createTemporary(this, null, this);
     }
-    
-    public boolean isOpaque()
-    {
-      return true;
+
+    // EP : Added transparency management  
+    public boolean isOpaque() {
+        return true;
     }
+    
+    public Color getOpacity(ShadingState state) {
+        return null;
+    }
+    // EP : End of modification
 }

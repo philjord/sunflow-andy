@@ -1,6 +1,7 @@
 package org.sunflow.image.readers;
 
 import javaawt.Graphics2D;
+import javaawt.Transparency;
 import javaawt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,84 +20,77 @@ import org.sunflow.image.BitmapReader;
 import org.sunflow.image.Color;
 import org.sunflow.image.formats.BitmapRGB8;
 
-public class JPGBitmapReader
-  implements BitmapReader
-{
-  public Bitmap load(String paramString, boolean paramBoolean)
-    throws IOException, BitmapReader.BitmapFormatException
-  {
-    URL localObject4;
-    InputStream localObject1;
-    try
-    {
-      URLConnection localURLConnection = new URL(paramString).openConnection();
-      if ((localURLConnection instanceof JarURLConnection))
-      {
-        localObject4 = ((JarURLConnection)localURLConnection).getJarFileURL();
-        if (localObject4.getProtocol().equalsIgnoreCase("file"))
-          try
-          {
-            if (new File(localObject4.toURI()).canWrite())
-              localURLConnection.setUseCaches(false);
-          }
-          catch (URISyntaxException localURISyntaxException)
-          {
-            throw new IOException(localURISyntaxException);
-          }
-      }
-      localObject1 = localURLConnection.getInputStream();
+public class JPGBitmapReader implements BitmapReader {
+    public Bitmap load(String filename, boolean isLinear) throws IOException, BitmapFormatException {
+        // EP : Try to read filename as an URL or as a file
+        InputStream f;
+        try {
+            // Let's try first to read filename as an URL
+            URLConnection connection = new URL(filename).openConnection();
+            if (connection instanceof JarURLConnection) {
+                JarURLConnection urlConnection = (JarURLConnection) connection;
+                URL jarFileUrl = urlConnection.getJarFileURL();
+                if (jarFileUrl.getProtocol().equalsIgnoreCase("file")) {
+                    try {
+                        if (new File(jarFileUrl.toURI()).canWrite()) {
+                            // Refuse to use cache to be able to delete the writable files accessed with jar protocol,
+                            // as suggested in http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6962459
+                            connection.setUseCaches(false);
+                        }
+                    } catch (URISyntaxException ex) {
+                        throw new IOException(ex);
+                    }
+                }
+            }
+            f = connection.getInputStream();
+        } catch (MalformedURLException ex) {
+            // Let's try to read filename as a file
+            f = new FileInputStream(filename);
+        }
+
+        BufferedImage bi;
+        try {
+            // regular image, load using Java api - ignore alpha channel
+            bi = ImageIO.read(f);
+        } finally {
+            f.close();
+        }
+      //PJ BufferedImage.TYPE_INT_ARGB only
+        if (  bi.getType() != BufferedImage.TYPE_INT_ARGB) {
+          // Transform as TYPE_INT_ARGB or TYPE_INT_RGB (much faster than calling image.getRGB())
+          BufferedImage tmp = new BufferedImage(bi.getWidth(), bi.getHeight(), 
+                    BufferedImage.TYPE_INT_ARGB);
+          Graphics2D g = (Graphics2D)tmp.getGraphics();
+          g.drawImage(bi, null, 0, 0);
+          g.dispose();
+          bi = tmp;
+        }
+        // Retrieve image bits
+        int [] imageBits = (int [])bi.getRaster().getDataElements(0, 0, bi.getWidth(), bi.getHeight(), null);
+        // EP : End of modification
+
+        int width = bi.getWidth();
+        int height = bi.getHeight();
+        byte[] pixels = new byte[3 * width * height];
+        for (int y = 0, index = 0; y < height; y++) {
+            for (int x = 0; x < width; x++, index += 3) {
+                // EP : Retrieved image data with raster data 
+                // int argb = bi.getRGB(x, height - 1 - y);
+                int argb = imageBits [x + (height - 1 - y) * width];                
+                // EP : End of modification
+              //PJ 2<=>0
+                pixels[index + 2] = (byte) (argb >> 16);
+                pixels[index + 1] = (byte) (argb >> 8);
+                pixels[index + 0] = (byte) argb;
+            }
+        }
+        if (!isLinear) {
+            for (int index = 0; index < pixels.length; index += 3) {
+                pixels[index + 0] = Color.NATIVE_SPACE.rgbToLinear(pixels[index + 0]);
+                pixels[index + 1] = Color.NATIVE_SPACE.rgbToLinear(pixels[index + 1]);
+                pixels[index + 2] = Color.NATIVE_SPACE.rgbToLinear(pixels[index + 2]);
+            }
+        }
+        return new BitmapRGB8(width, height, pixels);
     }
-    catch (MalformedURLException localMalformedURLException)
-    {
-      localObject1 = new FileInputStream(paramString);
-    }
-    BufferedImage localObject2;
-    try
-    {
-      localObject2 = ImageIO.read(localObject1);
-    }
-    finally
-    {
-      localObject1.close();
-    }
-    if (localObject2.getType() != BufferedImage.TYPE_INT_ARGB)
-    {        
-        BufferedImage  localObject3 = new BufferedImage(localObject2.getWidth(), localObject2.getHeight(), BufferedImage.TYPE_INT_ARGB);//i != 0 ? 1 : 2);
-        Graphics2D localObject5 = (Graphics2D) localObject3.getGraphics();
-      localObject5.drawImage(localObject2, null, 0, 0);
-      localObject5.dispose();
-      localObject2 = localObject3;
-       
-    }
-    int[] localObject3 = localObject2.getRaster().getDataElements(0, 0, localObject2.getWidth(), localObject2.getHeight(), null);
-    int i = localObject2.getWidth();
-    int j = localObject2.getHeight();
-    byte[] arrayOfByte = new byte[3 * i * j];
-    int k = 0;
-    int m = 0;
-    while (k < j)
-    {
-      int n = 0;
-      while (n < i)
-      {
-        int i1 = localObject3[(n + (j - 1 - k) * i)];
-        //PJ 0<->2 swapped for BitMap on android
-        arrayOfByte[(m + 2)] = (byte)(i1 >> 16);
-        arrayOfByte[(m + 1)] = (byte)(i1 >> 8);
-        arrayOfByte[(m + 0)] = (byte)i1;
-        //PJ interestingly alpha is ignored
-        n++;
-        m += 3;
-      }
-      k++;
-    }
-    if (!paramBoolean)
-      for (k = 0; k < arrayOfByte.length; k += 3)
-      {
-        arrayOfByte[(k + 0)] = Color.NATIVE_SPACE.rgbToLinear(arrayOfByte[(k + 0)]);
-        arrayOfByte[(k + 1)] = Color.NATIVE_SPACE.rgbToLinear(arrayOfByte[(k + 1)]);
-        arrayOfByte[(k + 2)] = Color.NATIVE_SPACE.rgbToLinear(arrayOfByte[(k + 2)]);
-      }
-    return new BitmapRGB8(i, j, arrayOfByte);
-  }
 }

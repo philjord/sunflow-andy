@@ -1,5 +1,8 @@
 package org.sunflow.image.readers;
 
+import javaawt.Graphics2D;
+import javaawt.Transparency;
+import javaawt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -10,94 +13,89 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 
+import javaawt.imageio.ImageIO;
+
 import org.sunflow.image.Bitmap;
 import org.sunflow.image.BitmapReader;
 import org.sunflow.image.Color;
 import org.sunflow.image.formats.BitmapRGBA8;
 
-import javaawt.Graphics2D;
-import javaawt.image.BufferedImage;
-import javaawt.imageio.ImageIO;
+public class PNGBitmapReader implements BitmapReader {
+    public Bitmap load(String filename, boolean isLinear) throws IOException, BitmapFormatException {
+        // EP : Try to read filename as an URL or as a file
+        InputStream f;
+        try {
+            // Let's try first to read filename as an URL
+            URLConnection connection = new URL(filename).openConnection();
+            if (connection instanceof JarURLConnection) {
+                JarURLConnection urlConnection = (JarURLConnection) connection;
+                URL jarFileUrl = urlConnection.getJarFileURL();
+                if (jarFileUrl.getProtocol().equalsIgnoreCase("file")) {
+                    try {
+                        if (new File(jarFileUrl.toURI()).canWrite()) {
+                            // Refuse to use cache to be able to delete the writable files accessed with jar protocol,
+                            // as suggested in http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6962459
+                            connection.setUseCaches(false);
+                        }
+                    } catch (URISyntaxException ex) {
+                        throw new IOException(ex);
+                    }
+                }
+            }
+            f = connection.getInputStream();
+        } catch (MalformedURLException ex) {
+            // Let's try to read filename as a file
+            f = new FileInputStream(filename);
+        }
 
-public class PNGBitmapReader
-  implements BitmapReader
-{
-  public Bitmap load(String paramString, boolean paramBoolean)
-    throws IOException, BitmapReader.BitmapFormatException
-  {
-      InputStream localObject1;
-    try
-    {
-      URLConnection localURLConnection = new URL(paramString).openConnection();
-      if ((localURLConnection instanceof JarURLConnection))
-      {
-        JarURLConnection localJarURLConnection = (JarURLConnection)localURLConnection;
-        URL  localObject3 = localJarURLConnection.getJarFileURL();
-        if (localObject3.getProtocol().equalsIgnoreCase("file"))
-          try
-          {
-            if (new File(localObject3.toURI()).canWrite())
-              localURLConnection.setUseCaches(false);
-          }
-          catch (URISyntaxException localURISyntaxException)
-          {
-            throw new IOException(localURISyntaxException);
-          }
-      }
-      localObject1 = localURLConnection.getInputStream();
+        BufferedImage bi;
+        try {
+            // regular image, load using Java api 
+            bi = ImageIO.read(f);
+        } finally {
+            f.close();
+        }
+        
+        boolean opaque = bi.getTransparency() == Transparency.OPAQUE;
+      //PJ BufferedImage.TYPE_INT_ARGB only
+        if (bi.getType() != BufferedImage.TYPE_INT_ARGB) {
+            // Transform as TYPE_INT_ARGB or TYPE_INT_RGB (much faster than calling image.getRGB())
+            BufferedImage tmp = new BufferedImage(bi.getWidth(), bi.getHeight(), 
+                     BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = (Graphics2D)tmp.getGraphics();
+            g.drawImage(bi, null, 0, 0);
+            g.dispose();
+            bi = tmp;
+        }
+        // Retrieve image bits
+        int [] imageBits = (int [])bi.getRaster().getDataElements(0, 0, bi.getWidth(), bi.getHeight(), null);
+        // EP : End of modification
+        
+        int width = bi.getWidth();
+        int height = bi.getHeight();
+        byte[] pixels = new byte[4 * width * height];
+        for (int y = 0, index = 0; y < height; y++) {
+            for (int x = 0; x < width; x++, index += 4) {
+                // EP : Retrieved image data with raster data 
+                // int argb = bi.getRGB(x, height - 1 - y);
+                int argb = imageBits [x + (height - 1 - y) * width];                
+                // EP : End of modification
+                //PJ 2<=>0
+                pixels[index + 2] = (byte) (argb >> 16);
+                pixels[index + 1] = (byte) (argb >> 8);
+                pixels[index + 0] = (byte) argb;
+                // EP : Added opaque transparency  
+                pixels[index + 3] = opaque ? (byte)0xFF : (byte) (argb >> 24);
+                // EP : End of modification 
+            }
+        }
+        if (!isLinear) {
+            for (int index = 0; index < pixels.length; index += 4) {
+                pixels[index + 0] = Color.NATIVE_SPACE.rgbToLinear(pixels[index + 0]);
+                pixels[index + 1] = Color.NATIVE_SPACE.rgbToLinear(pixels[index + 1]);
+                pixels[index + 2] = Color.NATIVE_SPACE.rgbToLinear(pixels[index + 2]);
+            }
+        }
+        return new BitmapRGBA8(width, height, pixels);
     }
-    catch (MalformedURLException localMalformedURLException)
-    {
-      localObject1 = new FileInputStream(paramString);
-    }
-    BufferedImage localObject2;
-    try
-    {
-      localObject2 = ImageIO.read(localObject1);
-    }
-    finally
-    {
-      localObject1.close();
-    }
-    int hasTransparency = localObject2.getTransparency() == 1 ? 1 : 0;
-    if (localObject2.getType() != BufferedImage.TYPE_INT_ARGB)
-    {
-        BufferedImage  localObject3 = new BufferedImage(localObject2.getWidth(), localObject2.getHeight(), BufferedImage.TYPE_INT_ARGB);//i != 0 ? 1 : 2);
-      Graphics2D localGraphics2D = (Graphics2D)localObject3.getGraphics();
-      localGraphics2D.drawImage(localObject2, null, 0, 0);
-      localGraphics2D.dispose();
-      localObject2 = localObject3;
-     
-    }
-    int[] localObject3 = localObject2.getRaster().getDataElements(0, 0, localObject2.getWidth(), localObject2.getHeight(), null);
-    int j = localObject2.getWidth();
-    int k = localObject2.getHeight();
-    byte[] arrayOfByte = new byte[4 * j * k];
-    int m = 0;
-    int n = 0;
-    while (m < k)
-    {
-      int i1 = 0;
-      while (i1 < j)
-      {
-        int i2 = localObject3[(i1 + (k - 1 - m) * j)];
-        //PJ 0<->2 swapped for BitMap on android
-        arrayOfByte[(n + 2)] = (byte)(i2 >> 16);
-        arrayOfByte[(n + 1)] = (byte)(i2 >> 8);
-        arrayOfByte[(n + 0)] = (byte)i2;
-        arrayOfByte[(n + 3)] = (hasTransparency != 0 ? -1 : (byte)(i2 >> 24));
-        i1++;
-        n += 4;
-      }
-      m++;
-    }
-    if (!paramBoolean)
-      for (m = 0; m < arrayOfByte.length; m += 4)
-      {
-        arrayOfByte[(m + 0)] = Color.NATIVE_SPACE.rgbToLinear(arrayOfByte[(m + 0)]);
-        arrayOfByte[(m + 1)] = Color.NATIVE_SPACE.rgbToLinear(arrayOfByte[(m + 1)]);
-        arrayOfByte[(m + 2)] = Color.NATIVE_SPACE.rgbToLinear(arrayOfByte[(m + 2)]);
-      }
-    return new BitmapRGBA8(j, k, arrayOfByte);
-  }
 }

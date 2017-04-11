@@ -18,73 +18,62 @@ import org.sunflow.image.BitmapReader;
 import org.sunflow.image.Color;
 import org.sunflow.image.formats.BitmapRGB8;
 
-public class BMPBitmapReader
-  implements BitmapReader
-{
-  public Bitmap load(String paramString, boolean paramBoolean)
-    throws IOException, BitmapReader.BitmapFormatException
-  {
-      InputStream localObject1;
-    try
-    {
-      URLConnection localURLConnection = new URL(paramString).openConnection();
-      if ((localURLConnection instanceof JarURLConnection))
-      {
-        JarURLConnection localJarURLConnection = (JarURLConnection)localURLConnection;
-        URL localURL = localJarURLConnection.getJarFileURL();
-        if (localURL.getProtocol().equalsIgnoreCase("file"))
-          try
-          {
-            if (new File(localURL.toURI()).canWrite())
-              localURLConnection.setUseCaches(false);
-          }
-          catch (URISyntaxException localURISyntaxException)
-          {
-            throw new IOException(localURISyntaxException);
-          }
-      }
-      localObject1 = localURLConnection.getInputStream();
+public class BMPBitmapReader implements BitmapReader {
+    public Bitmap load(String filename, boolean isLinear) throws IOException, BitmapFormatException {
+        // EP : Try to read filename as an URL or as a file
+        InputStream f;
+        try {
+            // Let's try first to read filename as an URL
+            URLConnection connection = new URL(filename).openConnection();
+            if (connection instanceof JarURLConnection) {
+                JarURLConnection urlConnection = (JarURLConnection) connection;
+                URL jarFileUrl = urlConnection.getJarFileURL();
+                if (jarFileUrl.getProtocol().equalsIgnoreCase("file")) {
+                    try {
+                        if (new File(jarFileUrl.toURI()).canWrite()) {
+                            // Refuse to use cache to be able to delete the writable files accessed with jar protocol,
+                            // as suggested in http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6962459
+                            connection.setUseCaches(false);
+                        }
+                    } catch (URISyntaxException ex) {
+                        throw new IOException(ex);
+                    }
+                }
+            }
+            f = connection.getInputStream();
+        } catch (MalformedURLException ex) {
+            // Let's try to read filename as a file
+            f = new FileInputStream(filename);
+        }
+
+        BufferedImage bi;
+        try {
+            // regular image, load using Java api - ignore alpha channel
+            bi = ImageIO.read(f);
+        } finally {
+            f.close();
+        }
+        // EP : End of modification
+
+        int width = bi.getWidth();
+        int height = bi.getHeight();
+        byte[] pixels = new byte[3 * width * height];
+        for (int y = 0, index = 0; y < height; y++) {
+            for (int x = 0; x < width; x++, index += 3) {
+                int argb = bi.getRGB(x, height - 1 - y);
+              //PJ 2<=>0
+                pixels[index + 2] = (byte) (argb >> 16);
+                pixels[index + 1] = (byte) (argb >> 8);
+                pixels[index + 0] = (byte) argb;
+            }
+        }
+        if (!isLinear) {
+            for (int index = 0; index < pixels.length; index += 3) {
+                pixels[index + 0] = Color.NATIVE_SPACE.rgbToLinear(pixels[index + 0]);
+                pixels[index + 1] = Color.NATIVE_SPACE.rgbToLinear(pixels[index + 1]);
+                pixels[index + 2] = Color.NATIVE_SPACE.rgbToLinear(pixels[index + 2]);
+            }
+        }
+        return new BitmapRGB8(width, height, pixels);
     }
-    catch (MalformedURLException localMalformedURLException)
-    {
-      localObject1 = new FileInputStream(paramString);
-    }
-    BufferedImage localBufferedImage;
-    try
-    {
-      localBufferedImage = ImageIO.read( localObject1);
-    }
-    finally
-    {
-      localObject1.close();
-    }
-    int i = localBufferedImage.getWidth();
-    int j = localBufferedImage.getHeight();
-    byte[] arrayOfByte = new byte[3 * i * j];
-    int k = 0;
-    int m = 0;
-    while (k < j)
-    {
-      int n = 0;
-      while (n < i)
-      {
-        int i1 = localBufferedImage.getRGB(n, j - 1 - k);
-      //PJ 0<->2 swapped for BitMap on android
-        arrayOfByte[(m + 2)] = (byte)(i1 >> 16);
-        arrayOfByte[(m + 1)] = (byte)(i1 >> 8);
-        arrayOfByte[(m + 0)] = (byte)i1;
-        n++;
-        m += 3;
-      }
-      k++;
-    }
-    if (!paramBoolean)
-      for (k = 0; k < arrayOfByte.length; k += 3)
-      {
-        arrayOfByte[(k + 0)] = Color.NATIVE_SPACE.rgbToLinear(arrayOfByte[(k + 0)]);
-        arrayOfByte[(k + 1)] = Color.NATIVE_SPACE.rgbToLinear(arrayOfByte[(k + 1)]);
-        arrayOfByte[(k + 2)] = Color.NATIVE_SPACE.rgbToLinear(arrayOfByte[(k + 2)]);
-      }
-    return  new BitmapRGB8(i, j, arrayOfByte);
-  }
 }

@@ -15,133 +15,115 @@ import org.sunflow.image.Bitmap;
 import org.sunflow.image.BitmapReader;
 import org.sunflow.image.formats.BitmapXYZ;
 
-public class IGIBitmapReader
-  implements BitmapReader
-{
-  public Bitmap load(String paramString, boolean paramBoolean)
-    throws IOException, BitmapReader.BitmapFormatException
-  {
-      
-      InputStream localObject;
-    try
-    {
-      URLConnection localURLConnection = new URL(paramString).openConnection();
-      if ((localURLConnection instanceof JarURLConnection))
-      {
-        JarURLConnection localJarURLConnection = (JarURLConnection)localURLConnection;
-        URL localURL = localJarURLConnection.getJarFileURL();
-        if (localURL.getProtocol().equalsIgnoreCase("file"))
-          try
-          {
-            if (new File(localURL.toURI()).canWrite())
-              localURLConnection.setUseCaches(false);
-          }
-          catch (URISyntaxException localURISyntaxException)
-          {
-            throw new IOException(localURISyntaxException);
-          }
-      }
-      localObject = localURLConnection.getInputStream();
-    }
-    catch (MalformedURLException localMalformedURLException)
-    {
-      localObject = new FileInputStream(paramString);
-    }
-      localObject = new BufferedInputStream(localObject);
-    int i = read32i(localObject);
-    int j = read32i(localObject);
-    localObject.skip(8L);
-    int k = read32i(localObject);
-    int m = read32i(localObject);
-    int n = read32i(localObject);
-    int i1 = read32i(localObject);
-    int i2 = read32i(localObject);
-    int i3 = read32i(localObject);
-    localObject.skip(5000L);
-    if (i != 66613373)
-      throw new BitmapReader.BitmapFormatException("wrong magic: " + i);
-    if (j != 1)
-      throw new BitmapReader.BitmapFormatException("unsupported version: " + j);
-    if (i1 != 0)
-      throw new BitmapReader.BitmapFormatException("unsupported compression: " + i1);
-    if (i3 != 0)
-      throw new BitmapReader.BitmapFormatException("unsupported color space: " + i3);
-    if (i2 != k * m * 12)
-      throw new BitmapReader.BitmapFormatException("invalid data block size: " + i2);
-    if ((k <= 0) || (m <= 0))
-      throw new BitmapReader.BitmapFormatException("invalid image size: " + k + "x" + m);
-    if (n <= 0)
-      throw new BitmapReader.BitmapFormatException("invalid super sample factor: " + n);
-    if ((k % n != 0) || (m % n != 0))
-      throw new BitmapReader.BitmapFormatException("invalid image size: " + k + "x" + m);
-    float[] arrayOfFloat1 = new float[k * m * 3];
-    int i4 = 0;
-    int i5 = 3 * (m - 1) * k;
-    int i6;
-    while (i4 < m)
-    {
-      i6 = 0;
-      while (i6 < k)
-      {
-        //PJ 0<->2 swapped for BitMap on android
-        arrayOfFloat1[(i5 + 2)] = read32f(localObject);
-        arrayOfFloat1[(i5 + 1)] = read32f(localObject);
-        arrayOfFloat1[(i5 + 0)] = read32f(localObject);
-        i6++;
-        i5 += 3;
-      }
-      i4++;
-      i5 -= 6 * k;
-    }
-    localObject.close();
-    if (n > 1)
-    {
-      float[] arrayOfFloat2 = new float[arrayOfFloat1.length / (n * n)];
-      float f1 = 1.0F / (n * n);
-      i6 = 0;
-      int i7 = 0;
-      while (i6 < m)
-      {
-        int i8 = 0;
-        while (i8 < k)
-        {
-          float f2 = 0.0F;
-          float f3 = 0.0F;
-          float f4 = 0.0F;
-          for (int i9 = 0; i9 < n; i9++)
-            for (int i10 = 0; i10 < n; i10++)
-            {
-              int i11 = 3 * (i8 + i10 + (i6 + i9) * k);
-              f2 += arrayOfFloat1[(i11 + 0)];
-              f3 += arrayOfFloat1[(i11 + 1)];
-              f4 += arrayOfFloat1[(i11 + 2)];
+/**
+ * Reads images in Indigo's native XYZ format.
+ * http://www2.indigorenderer.com/joomla/forum/viewtopic.php?p=11430
+ */
+public class IGIBitmapReader implements BitmapReader {
+    public Bitmap load(String filename, boolean isLinear) throws IOException, BitmapFormatException {
+        // EP : Try to read filename as an URL or as a file
+        InputStream stream;
+        try {
+          // Let's try first to read filename as an URL
+            URLConnection connection = new URL(filename).openConnection();
+            if (connection instanceof JarURLConnection) {
+                JarURLConnection urlConnection = (JarURLConnection) connection;
+                URL jarFileUrl = urlConnection.getJarFileURL();
+                if (jarFileUrl.getProtocol().equalsIgnoreCase("file")) {
+                    try {
+                        if (new File(jarFileUrl.toURI()).canWrite()) {
+                            // Refuse to use cache to be able to delete the writable files accessed with jar protocol,
+                            // as suggested in http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6962459
+                            connection.setUseCaches(false);
+                        }
+                    } catch (URISyntaxException ex) {
+                        throw new IOException(ex);
+                    }
+                }
             }
-          arrayOfFloat2[(i7 + 0)] = (f2 * f1);
-          arrayOfFloat2[(i7 + 1)] = (f3 * f1);
-          arrayOfFloat2[(i7 + 2)] = (f4 * f1);
-          i8 += n;
-          i7 += 3;
+            stream = connection.getInputStream();
+        } catch (MalformedURLException ex) {
+            // Let's try to read filename as a file
+            stream = new FileInputStream(filename);
         }
-        i6 += n;
-      }
-      return new BitmapXYZ(k / n, m / n, arrayOfFloat2);
+
+        stream = new BufferedInputStream(stream);
+        // End of modification
+
+        // read header
+        int magic = read32i(stream);
+        int version = read32i(stream);
+        stream.skip(8); // skip number of samples (double value)
+        int width = read32i(stream);
+        int height = read32i(stream);
+        int superSample = read32i(stream); // super sample factor
+        int compression = read32i(stream);
+        int dataSize = read32i(stream);
+        int colorSpace = read32i(stream);
+        stream.skip(5000); // skip the rest of the header (unused for now)
+        // error checking
+        if (magic != 66613373)
+            throw new BitmapFormatException("wrong magic: " + magic);
+        if (version != 1)
+            throw new BitmapFormatException("unsupported version: " + version);
+        if (compression != 0)
+            throw new BitmapFormatException("unsupported compression: " + compression);
+        if (colorSpace != 0)
+            throw new BitmapFormatException("unsupported color space: " + colorSpace);
+        if (dataSize != (width * height * 12))
+            throw new BitmapFormatException("invalid data block size: " + dataSize);
+        if (width <= 0 || height <= 0)
+            throw new BitmapFormatException("invalid image size: " + width + "x" + height);
+        if (superSample <= 0)
+            throw new BitmapFormatException("invalid super sample factor: " + superSample);
+        if ((width % superSample) != 0 || (height % superSample) != 0)
+            throw new BitmapFormatException("invalid image size: " + width + "x" + height);
+        float[] xyz = new float[width * height * 3];
+        for (int y = 0, i = 3 * (height - 1) * width; y < height; y++, i -= 6 * width) {
+            for (int x = 0; x < width; x++, i += 3) {
+              //PJ 2<=>0
+                xyz[i + 2] = read32f(stream);
+                xyz[i + 1] = read32f(stream);
+                xyz[i + 0] = read32f(stream);
+            }
+        }
+        stream.close();
+        if (superSample > 1) {
+            // rescale image (basic box filtering)
+            float[] rescaled = new float[xyz.length / (superSample * superSample)];
+            float inv = 1.0f / (superSample * superSample);
+            for (int y = 0, i = 0; y < height; y += superSample) {
+                for (int x = 0; x < width; x += superSample, i += 3) {
+                    float X = 0;
+                    float Y = 0;
+                    float Z = 0;
+                    for (int sy = 0; sy < superSample; sy++) {
+                        for (int sx = 0; sx < superSample; sx++) {
+                            int offset = 3 * ((x + sx + (y + sy) * width));
+                            X += xyz[offset + 0];
+                            Y += xyz[offset + 1];
+                            Z += xyz[offset + 2];
+                        }
+                    }
+                    rescaled[i + 0] = X * inv;
+                    rescaled[i + 1] = Y * inv;
+                    rescaled[i + 2] = Z * inv;
+                }
+            }
+            return new BitmapXYZ(width / superSample, height / superSample, rescaled);
+        } else
+            return new BitmapXYZ(width, height, xyz);
     }
-    return new BitmapXYZ(k, m, arrayOfFloat1);
-  }
 
-  private static final int read32i(InputStream paramInputStream)
-    throws IOException
-  {
-    int i = paramInputStream.read();
-    i |= paramInputStream.read() << 8;
-    i |= paramInputStream.read() << 16;
-    i |= paramInputStream.read() << 24;
-    return i;
-  }
+    private static final int read32i(InputStream stream) throws IOException {
+        int i = stream.read();
+        i |= stream.read() << 8;
+        i |= stream.read() << 16;
+        i |= stream.read() << 24;
+        return i;
+    }
 
-  private static final float read32f(InputStream paramInputStream)
-    throws IOException
-  {
-    return Float.intBitsToFloat(read32i(paramInputStream));
-  }
+    private static final float read32f(InputStream stream) throws IOException {
+        return Float.intBitsToFloat(read32i(stream));
+    }
 }
