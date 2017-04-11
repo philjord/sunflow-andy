@@ -59,13 +59,14 @@ public class PNGBitmapReader
     {
       localObject1.close();
     }
-    int i = localObject2.getTransparency() == 1 ? 1 : 0;
-    if ((localObject2.getType() != 1) && (localObject2.getType() != 2))
+    int hasTransparency = localObject2.getTransparency() == 1 ? 1 : 0;
+    if (localObject2.getType() != BufferedImage.TYPE_INT_ARGB)
     {
-        localObject2 = new BufferedImage(localObject2.getWidth(), localObject2.getHeight(), i != 0 ? 1 : 2);
-      Graphics2D localGraphics2D = (Graphics2D)localObject2.getGraphics();
+        BufferedImage  localObject3 = new BufferedImage(localObject2.getWidth(), localObject2.getHeight(), BufferedImage.TYPE_INT_ARGB);//i != 0 ? 1 : 2);
+      Graphics2D localGraphics2D = (Graphics2D)localObject3.getGraphics();
       localGraphics2D.drawImage(localObject2, null, 0, 0);
       localGraphics2D.dispose();
+      localObject2 = localObject3;
      
     }
     int[] localObject3 = localObject2.getRaster().getDataElements(0, 0, localObject2.getWidth(), localObject2.getHeight(), null);
@@ -80,10 +81,11 @@ public class PNGBitmapReader
       while (i1 < j)
       {
         int i2 = localObject3[(i1 + (k - 1 - m) * j)];
-        arrayOfByte[(n + 0)] = (byte)(i2 >> 16);
+        //PJ 0<->2 swapped for BitMap on android
+        arrayOfByte[(n + 2)] = (byte)(i2 >> 16);
         arrayOfByte[(n + 1)] = (byte)(i2 >> 8);
-        arrayOfByte[(n + 2)] = (byte)i2;
-        arrayOfByte[(n + 3)] = (i != 0 ? -1 : (byte)(i2 >> 24));
+        arrayOfByte[(n + 0)] = (byte)i2;
+        arrayOfByte[(n + 3)] = (hasTransparency != 0 ? -1 : (byte)(i2 >> 24));
         i1++;
         n += 4;
       }

@@ -69,9 +69,10 @@ public class BMPBitmapReader
       while (n < i)
       {
         int i1 = localBufferedImage.getRGB(n, j - 1 - k);
-        arrayOfByte[(m + 0)] = (byte)(i1 >> 16);
+      //PJ 0<->2 swapped for BitMap on android
+        arrayOfByte[(m + 2)] = (byte)(i1 >> 16);
         arrayOfByte[(m + 1)] = (byte)(i1 >> 8);
-        arrayOfByte[(m + 2)] = (byte)i1;
+        arrayOfByte[(m + 0)] = (byte)i1;
         n++;
         m += 3;
       }

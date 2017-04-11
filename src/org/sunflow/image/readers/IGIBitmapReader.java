@@ -83,9 +83,10 @@ public class IGIBitmapReader
       i6 = 0;
       while (i6 < k)
       {
-        arrayOfFloat1[(i5 + 0)] = read32f(localObject);
-        arrayOfFloat1[(i5 + 1)] = read32f(localObject);
+        //PJ 0<->2 swapped for BitMap on android
         arrayOfFloat1[(i5 + 2)] = read32f(localObject);
+        arrayOfFloat1[(i5 + 1)] = read32f(localObject);
+        arrayOfFloat1[(i5 + 0)] = read32f(localObject);
         i6++;
         i5 += 3;
       }

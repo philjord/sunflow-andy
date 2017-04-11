@@ -59,12 +59,13 @@ public class JPGBitmapReader
     {
       localObject1.close();
     }
-    if ((( localObject2).getType() != 1) && (localObject2.getType() != 2))
-    {
-        localObject2 = new BufferedImage(localObject2.getWidth(), localObject2.getHeight(), localObject2.getTransparency() == 1 ? 1 : 2);
-        Graphics2D localObject5 = (Graphics2D) localObject2.getGraphics();
+    if (localObject2.getType() != BufferedImage.TYPE_INT_ARGB)
+    {        
+        BufferedImage  localObject3 = new BufferedImage(localObject2.getWidth(), localObject2.getHeight(), BufferedImage.TYPE_INT_ARGB);//i != 0 ? 1 : 2);
+        Graphics2D localObject5 = (Graphics2D) localObject3.getGraphics();
       localObject5.drawImage(localObject2, null, 0, 0);
       localObject5.dispose();
+      localObject2 = localObject3;
        
     }
     int[] localObject3 = localObject2.getRaster().getDataElements(0, 0, localObject2.getWidth(), localObject2.getHeight(), null);
@@ -79,9 +80,11 @@ public class JPGBitmapReader
       while (n < i)
       {
         int i1 = localObject3[(n + (j - 1 - k) * i)];
-        arrayOfByte[(m + 0)] = (byte)(i1 >> 16);
+        //PJ 0<->2 swapped for BitMap on android
+        arrayOfByte[(m + 2)] = (byte)(i1 >> 16);
         arrayOfByte[(m + 1)] = (byte)(i1 >> 8);
-        arrayOfByte[(m + 2)] = (byte)i1;
+        arrayOfByte[(m + 0)] = (byte)i1;
+        //PJ interestingly alpha is ignored
         n++;
         m += 3;
       }
