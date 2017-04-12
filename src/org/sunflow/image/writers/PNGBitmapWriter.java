@@ -1,10 +1,10 @@
 package org.sunflow.image.writers;
 
-import java.awt.image.BufferedImage;
+import javaawt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-import javax.imageio.ImageIO;
+import javaawt.imageio.ImageIO;
 
 import org.sunflow.image.BitmapWriter;
 import org.sunflow.image.Color;

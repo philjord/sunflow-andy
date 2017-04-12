@@ -2,7 +2,7 @@ package org.sunflow.core;
 
 import java.util.ArrayList;
 
-import org.sunflow.core.display.FrameDisplay;
+ 
 import org.sunflow.image.Color;
 import org.sunflow.math.BoundingBox;
 import org.sunflow.math.MathUtils;
@@ -276,8 +276,9 @@ public class Scene {
      */
     public void render(Options options, ImageSampler sampler, Display display) {
         stats.reset();
-        if (display == null)
-            display = new FrameDisplay();
+        //PJPJ FrameDisplay is awt
+        //if (display == null)
+            //display = new FrameDisplay();
 
         if (bakingInstance != null) {
             UI.printDetailed(Module.SCENE, "Creating primitives for lightmapping ...");
