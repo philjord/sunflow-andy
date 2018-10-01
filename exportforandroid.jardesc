@@ -21,19 +21,16 @@
         <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.image.readers"/>
         <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow{AsciiFileSunflowAPI.java"/>
         <file path="/sunflow/.gitignore"/>
-        <folder path="/sunflow/exporters"/>
         <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.bucket"/>
         <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{ByteUtil.java"/>
         <file path="/sunflow/.project"/>
         <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.image.formats"/>
         <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{UserInterface.java"/>
         <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.modifiers"/>
-        <folder path="/sunflow/resources"/>
         <file path="/sunflow/.classpath"/>
         <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow{BinaryFileSunflowAPI.java"/>
         <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.photonmap"/>
         <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{UI.java"/>
-        <folder path="/sunflow/examples"/>
         <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{BenchmarkTest.java"/>
         <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{FileUtils.java"/>
         <file path="/sunflow/README"/>
