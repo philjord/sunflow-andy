@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="WINDOWS-1252" standalone="no"?>
+<?xml version="1.0" encoding="windows-1252" standalone="no"?>
 <jardesc>
-    <jar path="C:/Users/phil/AndroidStudioProjects/renovations3d-android/app/libs/sunflow-0.07.3pj.jar"/>
+    <jar path="C:/Users/pjnz/StudioProjects/renovations3d-android/app/libs/sunflow-0.07.3-andy.jar"/>
     <options buildIfNeeded="true" compress="true" descriptionLocation="/sunflow/exportforandroid.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="false" overwrite="true" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
     <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
     <selectedProjects/>
@@ -11,50 +11,50 @@
         </sealing>
     </manifest>
     <selectedElements exportClassFiles="true" exportJavaFiles="false" exportOutputFolder="false">
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.primitive"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow{SunflowAPIInterface.java"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{Memory.java"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.gi"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.image.writers"/>
-        <file path="/sunflow/LICENSE"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow{FileSunflowAPI.java"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.image.readers"/>
         <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow{AsciiFileSunflowAPI.java"/>
-        <file path="/sunflow/.gitignore"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.bucket"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{ByteUtil.java"/>
-        <file path="/sunflow/.project"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.image.formats"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{UserInterface.java"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.modifiers"/>
-        <file path="/sunflow/.classpath"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow{BinaryFileSunflowAPI.java"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.photonmap"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{UI.java"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{BenchmarkTest.java"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{FileUtils.java"/>
-        <file path="/sunflow/README"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.shader"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.util"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{Parser.java"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{Timer.java"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.filter"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.tesselatable"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.renderer"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow{PluginRegistry.java"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow{SunflowAPI.java"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{SearchPath.java"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.camera"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow{RenderObjectMap.java"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.light"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.parser"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system.ui"/>
-        <file path="/sunflow/CHANGELOG"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{Plugins.java"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.image"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.accel"/>
         <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{BenchmarkFramework.java"/>
-        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.math"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{BenchmarkTest.java"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow{BinaryFileSunflowAPI.java"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{ByteUtil.java"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow{FileSunflowAPI.java"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{FileUtils.java"/>
+        <file path="/sunflow/.classpath"/>
+        <file path="/sunflow/.gitignore"/>
+        <file path="/sunflow/.project"/>
+        <file path="/sunflow/CHANGELOG"/>
+        <file path="/sunflow/LICENSE"/>
+        <file path="/sunflow/README"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{Memory.java"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{Parser.java"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow{PluginRegistry.java"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{Plugins.java"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow{RenderObjectMap.java"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{SearchPath.java"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow{SunflowAPI.java"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow{SunflowAPIInterface.java"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{Timer.java"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{UI.java"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system{UserInterface.java"/>
         <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.accel"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.bucket"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.camera"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.filter"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.gi"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.light"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.modifiers"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.parser"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.photonmap"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.primitive"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.renderer"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.shader"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.core.tesselatable"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.image"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.image.formats"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.image.readers"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.image.writers"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.math"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.system.ui"/>
+        <javaElement handleIdentifier="=sunflow/src&lt;org.sunflow.util"/>
     </selectedElements>
 </jardesc>

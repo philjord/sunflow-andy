@@ -2,11 +2,14 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="lib" path="janino.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/awtgeom"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/awtshim"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk-25.0.0.36-hotspot">
 		<attributes>
 			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="C:/Users/pjnz/.m2/repository/org/jogamp/java3d/java3d-core-and/1.7.2/java3d-core-and-1.7.2.jar" sourcepath="C:/Users/pjnz/.m2/repository/org/jogamp/java3d/java3d-core-and/1.7.2/java3d-core-and-1.7.2-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/C:/Users/pjnz/.m2/repository/org/jogamp/java3d/java3d-core-and/1.7.2/java3d-core-and-1.7.2-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="output" path="classes"/>
